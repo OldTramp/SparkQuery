@@ -39,38 +39,38 @@ object Model extends Serializable {
 
   case class TempIP(
                      network: String,
-                     geonameId: Int
+                     geonameId: Long
                    )
 
   object TempIP {
     def parse(i: Array[String]) = {
 
-      TempIP(i(0).toString, i(1).toInt)
+      TempIP(i(0).toString, i(1).toLong)
     }
   }
 
   case class TempLoc(
-                      geonameId: Int,
+                      geonameId: Long,
                       country: String
                     )
 
   object TempLoc {
     def parse(i: Array[String]) = {
 
-      TempLoc(i(0).toInt, i(5).toString)
+      TempLoc(i(0).toLong, i(5).toString)
     }
   }
 
   case class CountryNetwork(
-                             geonameId: Int,
+//                             geonameId: Long,
                              country: String,
                              network: String
                            )
-  object CountryNetwork {
-    def parse(i: Array[String]) = {
-
-      CountryNetwork(i(0).toInt, i(1).toString, i(2).toString)
-    }
-  }
+//  object CountryNetwork {
+//    def parse(i: Array[String]) = {
+//
+//      CountryNetwork(i(0).toLong, i(1).toString, i(2).toString)
+//    }
+//  }
 
 }
