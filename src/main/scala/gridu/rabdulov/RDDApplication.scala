@@ -67,15 +67,17 @@ object RDDApplication {
 
     val countryAddresses = countryNetwork.keyBy(_.country).mapValues(e => new SubnetUtils(e.network).getInfo.getAllAddresses)
 
-    println("===============")
-    countryAddresses.take(10).foreach(println)
+    //    val filtered = countryNetwork.cartesian(purchases)
+    //      .filter(e => new SubnetUtils(e._1.network).getInfo.isInRange(e._2.clientIp))
 
-    countryAddresses.groupByKey().flatMapValues()
+    val addressToCountry = countryAddresses.flatMapValues(ar => ar.iterator).map(_.swap)
+
+    val ipToPurchase = purchases.keyBy(_.clientIp)
+
+    val stage4 = addressToCountry.join(ipToPurchase)
 
 
-//    val filtered = countryNetwork.cartesian(purchases)
-      //.filter(e => new SubnetUtils(e._1.network).getIn fo.isInRange(e._2.clientIp))
-
+    stage4.take(10).foreach(println)
 
     println("end")
 
