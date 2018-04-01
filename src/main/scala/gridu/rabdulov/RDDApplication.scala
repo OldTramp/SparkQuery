@@ -65,24 +65,26 @@ object RDDApplication {
 
     val countryNetwork = countries.join(networks).map(j => CountryNetwork(j._2._1.country, j._2._2.network))
 
-    val countryAddresses = countryNetwork.keyBy(_.country).mapValues(e => new SubnetUtils(e.network).getInfo.getAllAddresses)
+    val byCountry = countryNetwork.keyBy(_.country).mapValues(_.network).groupByKey()
 
-    //    val filtered = countryNetwork.cartesian(purchases)
-    //      .filter(e => new SubnetUtils(e._1.network).getInfo.isInRange(e._2.clientIp))
+    val purchaseCollection = purchases.map(p => (p.clientIp, p.productPrice)).collect()
+    sc.broadcast(purchaseCollection)
 
-    val addressToCountry = countryAddresses.flatMapValues(ar => ar.iterator).map(_.swap)
+    val withPurchase = byCountry.flatMapValues(_.iterator)
+      .mapValues(c => purchaseCollection.toStream
+        .filter(p => new SubnetUtils(c).getInfo.isInRange(p._1)).map(_._2).sum)
 
-    val ipToPurchase = purchases.keyBy(_.clientIp)
+    val topCountries = withPurchase.reduceByKey(_+_).sortBy(-_._2).take(10)
 
-    val stage4 = addressToCountry.join(ipToPurchase)
+    println("Top Countries:")
+    //TODO send result to MySQL
+    topCountries.foreach(println)
 
-
-    stage4.take(10).foreach(println)
 
     println("end")
 
   }
-  //new SubnetUtils(subnet.toString).getInfo.isInRange(address.toString);
+
 
   private def getTokens(value: String): Array[String] = {
     if (!"".equals(value)) {
