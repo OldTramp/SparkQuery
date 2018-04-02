@@ -3,6 +3,7 @@ package gridu.rabdulov
 import com.opencsv.CSVParser
 import gridu.rabdulov.Model.{CountryNetwork, TempIP, TempLoc, TopCategoryProducts}
 import org.apache.commons.net.util.SubnetUtils
+import org.apache.spark.sql.{SQLContext, SparkSession}
 import org.apache.spark.{HashPartitioner, SparkConf, SparkContext}
 
 object RDDApplication {
@@ -21,7 +22,7 @@ object RDDApplication {
 
     val purchases = eventsRDD.map(getTokens).map(Model.Purchase.parse)
 
-    purchases.cache()
+//    purchases.cache()
 
     val byCategory = purchases.map(p => (p.productCategory, 1)).reduceByKey(_+_)
     val topCategories = byCategory.sortBy(_._2, ascending = false).take(10)
@@ -29,6 +30,8 @@ object RDDApplication {
 //    println("Top Categories:")
 //    //TODO send result to MySQL
 //    topCategories.foreach(println)
+
+    val sqlContext = new SQLContext(sc)
 
 
 
@@ -76,9 +79,9 @@ object RDDApplication {
 
     val topCountries = withPurchase.reduceByKey(_+_).sortBy(-_._2).take(10)
 
-    println("Top Countries:")
-    //TODO send result to MySQL
-    topCountries.foreach(println)
+//    println("Top Countries:")
+//    //TODO send result to MySQL
+//    topCountries.foreach(println)
 
 
     println("end")
