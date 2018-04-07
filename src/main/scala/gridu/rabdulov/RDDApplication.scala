@@ -31,7 +31,7 @@ object RDDApplication {
 //    //TODO send result to MySQL
 //    topCategories.foreach(println)
 
-    val sqlContext = new SQLContext(sc)
+//    val sqlContext = new SQLContext(sc)
 
 
 
