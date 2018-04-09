@@ -2,10 +2,20 @@ package gridu.rabdulov
 
 import gridu.rabdulov.Model._
 import org.apache.commons.net.util.SubnetUtils
-import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.apache.spark.sql.types.{DataTypes, StructField, StructType}
 
 object DatasetApplication {
+
+  def writeToMysql(df: DataFrame, tableName: String): Unit = {
+    val prop = new java.util.Properties
+    prop.setProperty("driver", "com.mysql.jdbc.Driver")
+    prop.setProperty("user", "root")
+    prop.setProperty("password", "pass")
+    val url = "jdbc:mysql://localhost:3306/rabdulov"
+
+    df.write.mode("overwrite").jdbc(url, tableName, prop)
+  }
 
   def main(args: Array[String]): Unit = {
 
@@ -39,9 +49,9 @@ object DatasetApplication {
         "GROUP BY productCategory " +
         "ORDER BY cnt DESC LIMIT 10")
 
-    println("Top Categories:")
-    //TODO send result to MySQL
-    topCategories.collect.foreach(println)
+    writeToMysql(topCategories, "spark_ds_top_categories")
+//    println("Top Categories:")
+//    topCategories.collect.foreach(println)
 
 
     val topCategoryProducts = spark.sql(
@@ -57,10 +67,9 @@ object DatasetApplication {
         "WHERE rank <= 10"
       )
 
-    println("Top Products per Category:")
-    //TODO send result to MySQL
-    topCategoryProducts.collect.foreach(println)
-
+    writeToMysql(topCategoryProducts, "spark_ds_top_category_products")
+//    println("Top Products per Category:")
+//    topCategoryProducts.collect.foreach(println)
 
 
 
@@ -93,12 +102,10 @@ object DatasetApplication {
         "ORDER BY moneySpent DESC " +
         "LIMIT 10")
 
-    println("Top Countries:")
-    //TODO send result to MySQL
-    topCountries.collect.foreach(println)
 
-
-
+    writeToMysql(topCountries, "spark_ds_top_countries")
+//    println("Top Countries:")
+//    topCountries.collect.foreach(println)
 
 
     println("end")
@@ -106,10 +113,9 @@ object DatasetApplication {
 
   }
 
-
-  object PurchaseEncoders {
-    implicit def barEncoder: org.apache.spark.sql.Encoder[Purchase] =
-      org.apache.spark.sql.Encoders.kryo[Purchase]
-  }
+//  object PurchaseEncoders {
+//    implicit def barEncoder: org.apache.spark.sql.Encoder[Purchase] =
+//      org.apache.spark.sql.Encoders.kryo[Purchase]
+//  }
 }
 
