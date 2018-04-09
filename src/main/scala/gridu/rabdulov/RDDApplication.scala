@@ -3,7 +3,8 @@ package gridu.rabdulov
 import com.opencsv.CSVParser
 import gridu.rabdulov.Model.{CountryNetwork, TempIP, TempLoc, TopCategoryProducts}
 import org.apache.commons.net.util.SubnetUtils
-import org.apache.spark.sql.{SQLContext, SparkSession}
+import gridu.rabdulov.DatasetApplication.writeToMysql
+import org.apache.spark.sql.SQLContext
 import org.apache.spark.{HashPartitioner, SparkConf, SparkContext}
 
 object RDDApplication {
@@ -17,21 +18,19 @@ object RDDApplication {
 //      .set("spark.hadoop.mapreduce.input.fileinputformat.input.dir.recursive","true")
 
     val sc = new SparkContext(conf)
+    val sqlContext = new SQLContext(sc)
 
     val eventsRDD = sc.textFile("/Users/rabdulov/Downloads/hadoop/rabdulov/events/2018/02/*")
 
     val purchases = eventsRDD.map(getTokens).map(Model.Purchase.parse)
 
-//    purchases.cache()
 
     val byCategory = purchases.map(p => (p.productCategory, 1)).reduceByKey(_+_)
     val topCategories = byCategory.sortBy(_._2, ascending = false).take(10)
 
 //    println("Top Categories:")
-//    //TODO send result to MySQL
 //    topCategories.foreach(println)
-
-//    val sqlContext = new SQLContext(sc)
+    writeToMysql(sqlContext.createDataFrame(topCategories), "spark_rdd_top_categories")
 
 
 
@@ -46,10 +45,8 @@ object RDDApplication {
       .values.flatMap(list => list.iterator)
 
 //    println("Top Products per Category:")
-//    //TODO send result to MySQL
 //    topCategoryProducts.foreach(println)
-
-
+    writeToMysql(sqlContext.createDataFrame(topCategoryProducts), "spark_rdd_top_category_products")
 
 
 
@@ -80,8 +77,8 @@ object RDDApplication {
     val topCountries = withPurchase.reduceByKey(_+_).sortBy(-_._2).take(10)
 
 //    println("Top Countries:")
-//    //TODO send result to MySQL
 //    topCountries.foreach(println)
+    writeToMysql(sqlContext.createDataFrame(topCountries), "spark_rdd_top_countries")
 
 
     println("end")
