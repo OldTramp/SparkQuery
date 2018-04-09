@@ -1,9 +1,9 @@
 package gridu.rabdulov
 
 import gridu.rabdulov.Model._
+import org.apache.commons.net.util.SubnetUtils
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.types.{DataTypes, StructField, StructType}
-
 
 object DatasetApplication {
 
@@ -65,35 +65,40 @@ object DatasetApplication {
 
 
 
+    val networksDF = spark.read
+      .option("header","true")
+      .option("inferSchema", "true")
+      .csv("/Users/rabdulov/Downloads/hadoop/rabdulov/GeoLite2-Country-Blocks-IPv4.csv")
 
-//    val networksRDD = sc.textFile("/Users/rabdulov/Downloads/hadoop/rabdulov/GeoLite2-Country-Blocks-IPv4.csv")
-//    val header1 = networksRDD.first
-//    val networks = networksRDD.filter(_ != header1).map(getTokens)
-//      .filter(l => !l(0).isEmpty && !l(1).isEmpty).map(TempIP.parse).keyBy(_.geonameId)
-//
-//    val countriesRDD = sc.textFile("/Users/rabdulov/Downloads/hadoop/rabdulov/GeoLite2-Country-Locations-en.csv")
-//    val header2 = countriesRDD.first
-//    val countries = countriesRDD.filter(_ != header2).map(getTokens)
-//      .filter(l => !l(0).isEmpty && !l(5).isEmpty).map(TempLoc.parse).keyBy(_.geonameId)
-//    countries.partitionBy(new HashPartitioner(networks.partitions.length))
-//
-//
-//    val countryNetwork = countries.join(networks).map(j => CountryNetwork(j._2._1.country, j._2._2.network))
-//
-//    val byCountry = countryNetwork.keyBy(_.country).mapValues(_.network).groupByKey()
-//
-//    val purchaseCollection = purchases.map(p => (p.clientIp, p.productPrice)).collect()
-//    sc.broadcast(purchaseCollection)
-//
-//    val withPurchase = byCountry.flatMapValues(_.iterator)
-//      .mapValues(c => purchaseCollection.toStream
-//        .filter(p => new SubnetUtils(c).getInfo.isInRange(p._1)).map(_._2).sum)
-//
-//    val topCountries = withPurchase.reduceByKey(_+_).sortBy(-_._2).take(10)
 
-//    println("Top Countries:")
-//    //TODO send result to MySQL
-//    topCountries.foreach(println)
+    val countriesDF = spark.read
+      .option("header","true")
+      .option("inferSchema", "true")
+      .csv("/Users/rabdulov/Downloads/hadoop/rabdulov/GeoLite2-Country-Locations-en.csv")
+
+
+    val countryNetworkDS = countriesDF.join(networksDF, "geoname_id")
+      .select($"country_name".alias("country"), $"network")
+      .as[CountryNetwork]
+
+    countryNetworkDS.createOrReplaceTempView("countryNetwork")
+
+    val addrFromSubnetUDF = spark.udf.register("addr_from_subnet",
+      (ipAddress: String, network: String) => new SubnetUtils(network).getInfo.isInRange(ipAddress))
+
+    val topCountries = spark.sql(
+      "SELECT cn.country, round(sum(p.productPrice), 2) moneySpent " +
+        "FROM purchase p JOIN countryNetwork cn ON addr_from_subnet(p.clientIp, cn.network) " +
+        "GROUP BY country " +
+        "ORDER BY moneySpent DESC " +
+        "LIMIT 10")
+
+    println("Top Countries:")
+    //TODO send result to MySQL
+    topCountries.collect.foreach(println)
+
+
+
 
 
     println("end")
@@ -101,14 +106,6 @@ object DatasetApplication {
 
   }
 
-
-//  private def getTokens(value: String): Array[String] = {
-//    if (!"".equals(value)) {
-//      var tokens: Array[String] = csvParser.parseLine(value)
-//      return tokens
-//    }
-//    return null
-//  }
 
   object PurchaseEncoders {
     implicit def barEncoder: org.apache.spark.sql.Encoder[Purchase] =
