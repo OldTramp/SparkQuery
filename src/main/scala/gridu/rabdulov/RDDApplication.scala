@@ -15,12 +15,15 @@ object RDDApplication {
     val conf = new SparkConf()
       .setMaster("local")
       .setAppName("RDD queries")
-//      .set("spark.hadoop.mapreduce.input.fileinputformat.input.dir.recursive","true")
+      .set("spark.hadoop.mapreduce.input.fileinputformat.input.dir.recursive","true")
 
     val sc = new SparkContext(conf)
     val sqlContext = new SQLContext(sc)
 
-    val eventsRDD = sc.textFile("/Users/rabdulov/Downloads/hadoop/rabdulov/events/2018/02/*")
+//    val localPrefix = "/Users/rabdulov/Downloads/hadoop/rabdulov/"
+    val fsPrefix = "hdfs:///user/rabdulov/"
+
+    val eventsRDD = sc.textFile(fsPrefix + "events/2018/02/*")
 
     val purchases = eventsRDD.map(getTokens).map(Model.Purchase.parse)
 
@@ -51,12 +54,12 @@ object RDDApplication {
 
 
 
-    val networksRDD = sc.textFile("/Users/rabdulov/Downloads/hadoop/rabdulov/GeoLite2-Country-Blocks-IPv4.csv")
+    val networksRDD = sc.textFile(fsPrefix + "GeoLite2-Country-Blocks-IPv4.csv")
     val header1 = networksRDD.first
     val networks = networksRDD.filter(_ != header1).map(getTokens)
       .filter(l => !l(0).isEmpty && !l(1).isEmpty).map(TempIP.parse).keyBy(_.geonameId)
 
-    val countriesRDD = sc.textFile("/Users/rabdulov/Downloads/hadoop/rabdulov/GeoLite2-Country-Locations-en.csv")
+    val countriesRDD = sc.textFile(fsPrefix + "GeoLite2-Country-Locations-en.csv")
     val header2 = countriesRDD.first
     val countries = countriesRDD.filter(_ != header2).map(getTokens)
       .filter(l => !l(0).isEmpty && !l(5).isEmpty).map(TempLoc.parse).keyBy(_.geonameId)

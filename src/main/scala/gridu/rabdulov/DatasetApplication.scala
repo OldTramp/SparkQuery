@@ -11,8 +11,9 @@ object DatasetApplication {
     val prop = new java.util.Properties
     prop.setProperty("driver", "com.mysql.jdbc.Driver")
     prop.setProperty("user", "root")
-    prop.setProperty("password", "pass")
-    val url = "jdbc:mysql://localhost:3306/rabdulov"
+//    prop.setProperty("password", "pass")
+//    val url = "jdbc:mysql://localhost:3306/rabdulov"
+    val url = "jdbc:mysql://10.0.0.21:3306/rabdulov"
 
     df.write.mode("overwrite").jdbc(url, tableName, prop)
   }
@@ -23,7 +24,7 @@ object DatasetApplication {
       .appName("Dataset queries")
       .master("local[*]")
       .config("spark.sql.warehouse.dir", "target/spark-warehouse")
-//      .config("spark.hadoop.mapreduce.input.fileinputformat.input.dir.recursive","true")
+      .config("spark.hadoop.mapreduce.input.fileinputformat.input.dir.recursive","true")
       .getOrCreate
 
     import spark.implicits._
@@ -38,7 +39,8 @@ object DatasetApplication {
       )
     )
 
-    val eventsDF = spark.read.schema(purchaseSchema).csv("/Users/rabdulov/Downloads/hadoop/rabdulov/events/2018/02/*")
+    val fsPrefix = "hdfs:///user/rabdulov/"
+    val eventsDF = spark.read.schema(purchaseSchema).csv(fsPrefix + "events/2018/02/*")
 
     val purchases = eventsDF.as[Purchase]
     purchases.createOrReplaceTempView("purchase")
@@ -77,13 +79,13 @@ object DatasetApplication {
     val networksDF = spark.read
       .option("header","true")
       .option("inferSchema", "true")
-      .csv("/Users/rabdulov/Downloads/hadoop/rabdulov/GeoLite2-Country-Blocks-IPv4.csv")
+      .csv(fsPrefix + "GeoLite2-Country-Blocks-IPv4.csv")
 
 
     val countriesDF = spark.read
       .option("header","true")
       .option("inferSchema", "true")
-      .csv("/Users/rabdulov/Downloads/hadoop/rabdulov/GeoLite2-Country-Locations-en.csv")
+      .csv(fsPrefix + "GeoLite2-Country-Locations-en.csv")
 
 
     val countryNetworkDS = countriesDF.join(networksDF, "geoname_id")
