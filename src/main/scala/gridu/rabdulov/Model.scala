@@ -13,7 +13,7 @@ object Model extends Serializable {
                      )
 
   object Purchase {
-    def parse(i: Array[String]) = {
+    def parse(i: Array[String]): Purchase = {
       val fmt1 = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss")
       val fmt2 = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm")
 
@@ -43,7 +43,7 @@ object Model extends Serializable {
                    )
 
   object TempIP {
-    def parse(i: Array[String]) = {
+    def parse(i: Array[String]): TempIP = {
 
       TempIP(i(0).toString, i(1).toLong)
     }
@@ -55,7 +55,7 @@ object Model extends Serializable {
                     )
 
   object TempLoc {
-    def parse(i: Array[String]) = {
+    def parse(i: Array[String]): TempLoc = {
 
       TempLoc(i(0).toLong, i(5).toString)
     }
