@@ -109,15 +109,11 @@ object DatasetApplication {
 //    println("Top Countries:")
 //    topCountries.collect.foreach(println)
 
-
+    spark.close()
     println("end")
     spark.stop
 
   }
 
-//  object PurchaseEncoders {
-//    implicit def barEncoder: org.apache.spark.sql.Encoder[Purchase] =
-//      org.apache.spark.sql.Encoders.kryo[Purchase]
-//  }
 }
 

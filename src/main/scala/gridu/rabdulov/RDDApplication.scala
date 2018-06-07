@@ -31,8 +31,6 @@ object RDDApplication {
     val byCategory = purchases.map(p => (p.productCategory, 1)).reduceByKey(_+_)
     val topCategories = byCategory.sortBy(_._2, ascending = false).take(10)
 
-//    println("Top Categories:")
-//    topCategories.foreach(println)
     writeToMysql(sqlContext.createDataFrame(topCategories), "spark_rdd_top_categories")
 
 
@@ -47,8 +45,6 @@ object RDDApplication {
         (l1, l2) => (l1 ++ l2).sortBy(-_.count).take(10))
       .values.flatMap(list => list.iterator)
 
-//    println("Top Products per Category:")
-//    topCategoryProducts.foreach(println)
     writeToMysql(sqlContext.createDataFrame(topCategoryProducts), "spark_rdd_top_category_products")
 
 
@@ -79,11 +75,9 @@ object RDDApplication {
 
     val topCountries = withPurchase.reduceByKey(_+_).sortBy(-_._2).take(10)
 
-//    println("Top Countries:")
-//    topCountries.foreach(println)
     writeToMysql(sqlContext.createDataFrame(topCountries), "spark_rdd_top_countries")
 
-
+    sc.stop()
     println("end")
 
   }
