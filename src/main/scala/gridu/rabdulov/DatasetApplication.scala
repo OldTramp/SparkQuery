@@ -11,8 +11,6 @@ object DatasetApplication {
     val prop = new java.util.Properties
     prop.setProperty("driver", "com.mysql.jdbc.Driver")
     prop.setProperty("user", "root")
-//    prop.setProperty("password", "pass")
-//    val url = "jdbc:mysql://localhost:3306/rabdulov"
     val url = "jdbc:mysql://10.0.0.21:3306/rabdulov"
 
     df.write.mode("overwrite").jdbc(url, tableName, prop)
@@ -24,7 +22,7 @@ object DatasetApplication {
       .appName("Dataset queries")
       .master("local[*]")
       .config("spark.sql.warehouse.dir", "target/spark-warehouse")
-      .config("spark.hadoop.mapreduce.input.fileinputformat.input.dir.recursive","true")
+      .config("spark.hadoop.mapreduce.input.fileinputformat.input.dir.recursive", "true")
       .getOrCreate
 
     import spark.implicits._
@@ -52,41 +50,35 @@ object DatasetApplication {
         "ORDER BY cnt DESC LIMIT 10")
 
     writeToMysql(topCategories, "spark_ds_top_categories")
-//    println("Top Categories:")
-//    topCategories.collect.foreach(println)
+
 
 
     val topCategoryProducts = spark.sql(
       "SELECT productCategory, productName, cnt " +
         "FROM ( " +
-         " SELECT productCategory, productName, cnt, ROW_NUMBER() OVER (PARTITION BY productCategory ORDER BY cnt DESC) rank " +
-            "FROM ( " +
-              "SELECT productCategory, productName, count(*) cnt " +
-              "FROM purchase " +
-              "GROUP BY productCategory, productName" +
-            ") grouped" +
+        " SELECT productCategory, productName, cnt, ROW_NUMBER() OVER (PARTITION BY productCategory ORDER BY cnt DESC) rank " +
+        " FROM ( " +
+        "   SELECT productCategory, productName, count(*) cnt " +
+        "   FROM purchase " +
+        "   GROUP BY productCategory, productName" +
+        " ) grouped" +
         ") ranked " +
         "WHERE rank <= 10"
-      )
+    )
 
     writeToMysql(topCategoryProducts, "spark_ds_top_category_products")
-//    println("Top Products per Category:")
-//    topCategoryProducts.collect.foreach(println)
-
 
 
 
     val networksDF = spark.read
-      .option("header","true")
+      .option("header", "true")
       .option("inferSchema", "true")
       .csv(fsPrefix + "GeoLite2-Country-Blocks-IPv4.csv")
 
-
     val countriesDF = spark.read
-      .option("header","true")
+      .option("header", "true")
       .option("inferSchema", "true")
       .csv(fsPrefix + "GeoLite2-Country-Locations-en.csv")
-
 
     val countryNetworkDS = countriesDF.join(networksDF, "geoname_id")
       .select($"country_name".alias("country"), $"network")
@@ -104,15 +96,11 @@ object DatasetApplication {
         "ORDER BY moneySpent DESC " +
         "LIMIT 10")
 
-
     writeToMysql(topCountries, "spark_ds_top_countries")
-//    println("Top Countries:")
-//    topCountries.collect.foreach(println)
 
-    spark.close()
-    println("end")
+
     spark.stop
-
+    println("end")
   }
 
 }

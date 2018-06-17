@@ -4,6 +4,7 @@ import java.sql.Timestamp
 import java.text.{ParseException, SimpleDateFormat}
 
 object Model extends Serializable {
+
   case class Purchase(
                        productCategory: String,
                        productName: String,
@@ -17,7 +18,7 @@ object Model extends Serializable {
       val fmt1 = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss")
       val fmt2 = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm")
 
-      var timestamp:Timestamp = null
+      var timestamp: Timestamp = null
 
       try {
         timestamp = new Timestamp(fmt1.parse(i(3)).getTime)
@@ -29,12 +30,12 @@ object Model extends Serializable {
     }
   }
 
+
   case class TopCategoryProducts(
                                   productCategory: String,
                                   productName: String,
                                   count: Int
                                 )
-
 
 
   case class TempIP(
@@ -49,6 +50,7 @@ object Model extends Serializable {
     }
   }
 
+
   case class TempLoc(
                       geonameId: Long,
                       country: String
@@ -56,21 +58,14 @@ object Model extends Serializable {
 
   object TempLoc {
     def parse(i: Array[String]): TempLoc = {
-
       TempLoc(i(0).toLong, i(5).toString)
     }
   }
 
+
   case class CountryNetwork(
-//                             geonameId: Long,
                              country: String,
                              network: String
                            )
-//  object CountryNetwork {
-//    def parse(i: Array[String]) = {
-//
-//      CountryNetwork(i(0).toLong, i(1).toString, i(2).toString)
-//    }
-//  }
 
 }
